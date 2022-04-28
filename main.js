@@ -19,7 +19,8 @@ let turnDelta = .01;
 
 function render() {
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.5294, 0.8078, 0.9216, 1);
+  //gl.clearColor(0.5294, 0.8078, 0.9216, 1);
+  gl.clearColor(0.2235, 0.2392, 0.2784, 1);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   shaderProgram.bind();
@@ -103,6 +104,9 @@ void main() {
   `;
 
   const fragmentSource = `
+float fog_maxdist = 560.0;
+float fog_mindist = 150.0;
+vec4  fog_color = vec4(0.4, 0.4, 0.4, 1.0);
 const float ambientFactor = 0.7;
 const vec3 lightDirection = normalize(vec3(1.0, 1.0, 1.0));
 const vec3 albedo = vec3(1.0, 1.0, 1.0);
@@ -115,7 +119,13 @@ void main() {
   float litness = max(0.0, dot(normal, lightDirection));
   vec3 diffuse = albedo * litness * (1.0 - ambientFactor);
   vec3 ambient = albedo * ambientFactor;
-  fragmentColor = vec4(mixColor * (diffuse + ambient), 1.0);
+  vec4 tempColor = vec4(mixColor * (diffuse + ambient), 1.0);
+
+  float dist = fog_maxdist - fog_mindist;
+  float fog_factor = (fog_maxdist - dist) / (fog_maxdist - fog_mindist);
+  fog_factor = clamp(fog_factor, 0.0, 1.0);
+  fragmentColor = mix(fog_color, tempColor, fog_factor);
+  fragmentColor = tempColor;
 }
   `;
 
